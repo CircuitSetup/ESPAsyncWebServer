@@ -96,6 +96,10 @@ AsyncWebServerRequest::~AsyncWebServerRequest(){
   if(_tempFile){
     _tempFile.close();
   }
+  
+  if(_itemBuffer != NULL){
+    free(_itemBuffer);
+  }
 }
 
 void AsyncWebServerRequest::_onData(void *buf, size_t len){
@@ -134,7 +138,6 @@ void AsyncWebServerRequest::_onData(void *buf, size_t len){
     const bool needParse = _handler && !_handler->isRequestHandlerTrivial();
     if(_isMultipart){
       if(needParse){
-        size_t i;
         for(i=0; i<len; i++){
           _parseMultipartPostByte(((uint8_t*)buf)[i], i == len - 1);
           _parsedLength++;
@@ -146,7 +149,6 @@ void AsyncWebServerRequest::_onData(void *buf, size_t len){
         if(_contentType.startsWith("application/x-www-form-urlencoded")){
           _isPlainPost = true;
         } else if(_contentType == "text/plain" && __is_param_char(((char*)buf)[0])){
-          size_t i = 0;
           while (i<len && __is_param_char(((char*)buf)[i++]));
           if(i < len && ((char*)buf)[i-1] == '='){
             _isPlainPost = true;
@@ -158,7 +160,6 @@ void AsyncWebServerRequest::_onData(void *buf, size_t len){
         if(_handler) _handler->handleBody(this, (uint8_t*)buf, len, _parsedLength, _contentLength);
         _parsedLength += len;
       } else if(needParse) {
-        size_t i;
         for(i=0; i<len; i++){
           _parsedLength++;
           _parsePlainPostChar(((uint8_t*)buf)[i]);
@@ -617,8 +618,8 @@ bool AsyncWebServerRequest::hasHeader(const __FlashStringHelper * data) const {
       n += 1;
   }
   char * name = (char*) malloc(n+1);
-  name[n] = 0; 
   if (name) {
+    name[n] = 0;
     for(size_t b=0; b<n; b++)
       name[b] = pgm_read_byte(p++);    
     bool result = hasHeader( String(name) ); 
@@ -675,8 +676,8 @@ bool AsyncWebServerRequest::hasParam(const __FlashStringHelper * data, bool post
   size_t n = strlen_P(p);
 
   char * name = (char*) malloc(n+1);
-  name[n] = 0; 
   if (name) {
+    name[n] = 0;
     strcpy_P(name,p);    
     bool result = hasParam( name, post, file); 
     free(name); 
