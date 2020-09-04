@@ -112,10 +112,7 @@ size_t webSocketSendFrame(AsyncClient *client, bool final, uint8_t opcode, bool 
       return 0;
     }
   }
-  if(!client->send()){
-    //os_printf("error sending frame: %lu\n", headLen+len);
-    return 0;
-  }
+  client->send();
   return len;
 }
 
